@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/customers', 'CustomerController@create');
+Route::put('/customers/{id}', 'CustomerController@update');
+//Route::post('/transactions', 'TransactionController@create');
+//Route::get('/reports', 'ReportController@index');
