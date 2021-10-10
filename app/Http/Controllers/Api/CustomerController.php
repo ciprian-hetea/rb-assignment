@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use App\Http\Requests\CustomerCreateRequest;
+use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\Customer;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class CustomerController extends Controller
 {
@@ -19,13 +20,11 @@ class CustomerController extends Controller
                 400
             );
         }
-
-        return response($customer);
+        return response()->json($customer->fields);
     }
 
-    public function update($id, Request $request)
+    public function update($id, CustomerUpdateRequest $request)
     {
-        // TODO validation
         $customer = Customer::find($id);
         if ($customer === null) {
             return response(
@@ -34,7 +33,8 @@ class CustomerController extends Controller
             );
         }
 
-        $result = $customer->update($request->all());
+        $validated = $request->validated();
+        $result = $customer->update($validated);
 
         if ($result === false) {
             return response(
@@ -44,6 +44,6 @@ class CustomerController extends Controller
         }
 
         $updatedCustomer = Customer::find($id);
-        return response($updatedCustomer);
+        return response()->json($updatedCustomer->fields);
     }
 }

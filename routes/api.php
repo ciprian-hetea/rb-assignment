@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\CustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/customers', 'CustomerController@create');
-Route::put('/customers/{id}', 'CustomerController@update');
+Route::post('/customers', [CustomerController::class, 'create']);
+Route::put('/customers/{id}', [CustomerController::class, 'update']);
 //Route::post('/transactions', 'TransactionController@create');
 //Route::get('/reports', 'ReportController@index');

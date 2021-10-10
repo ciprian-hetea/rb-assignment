@@ -76,9 +76,30 @@ class Customer
         return new self($data);
     }
 
+    public static function findByEmail($email)
+    {
+        $table = self::$table;
+        $pdo = DB::connection()->getPdo();
+        $query = $pdo->prepare("SELECT * FROM $table WHERE email = :email");
+
+        try {
+            $query->execute(['email' => $email]);
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        $data = $query->fetch($pdo::FETCH_ASSOC);
+
+        if ($data === false) {
+            return null;
+        }
+
+        return new self($data);
+    }
+
     public function update($data = [])
     {
-        if (!isset($user->id)) {
+        if (!isset($this->fields['id'])) {
             throw new \BadMethodCallException(
                 "Can't update Customer with no id."
             );
@@ -129,7 +150,7 @@ class Customer
 
     public static function generateBonus()
     {
-        return rand(5, 25) / 100;
+        return rand(5, 20) / 100;
     }
 
     public function __set($property, $value)
