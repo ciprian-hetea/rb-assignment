@@ -10,13 +10,17 @@ use App\Http\Controllers\Controller;
 
 class CustomerController extends Controller
 {
+    /**
+     * @param CustomerCreateRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function create(CustomerCreateRequest $request)
     {
         $validated = $request->validated();
         $customer = Customer::create($validated);
 
         if ($customer === false) {
-            return response(
+            return response()->json(
                 [],
                 400
             );
@@ -24,11 +28,16 @@ class CustomerController extends Controller
         return response()->json($customer->fields);
     }
 
+    /**
+     * @param $id
+     * @param CustomerUpdateRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update($id, CustomerUpdateRequest $request)
     {
         $customer = Customer::find($id);
         if ($customer === null) {
-            return response(
+            return response()->json(
                 [],
                 404
             );
@@ -38,7 +47,7 @@ class CustomerController extends Controller
         $result = $customer->update($validated);
 
         if ($result === false) {
-            return response(
+            return response()->json(
                 [],
                 400
             );
@@ -48,11 +57,16 @@ class CustomerController extends Controller
         return response()->json($updatedCustomer->fields);
     }
 
+    /**
+     * @param $id
+     * @param AddTransactionRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function addTransaction($id, AddTransactionRequest $request)
     {
         $customer = Customer::find($id);
         if ($customer === null) {
-            return response(
+            return response()->json(
                 [],
                 404
             );
@@ -62,13 +76,13 @@ class CustomerController extends Controller
         $result = $customer->addTransaction($validated["amount"]);
 
         if ($result === false) {
-            return response(
+            return response()->json(
                 [],
                 409
             );
         }
 
-        return response(
+        return response()->json(
             [],
             200
         );

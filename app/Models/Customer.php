@@ -60,6 +60,10 @@ class Customer
         return self::find($lastId);
     }
 
+    /**
+     * @param $id
+     * @return Customer|null
+     */
     public static function find($id)
     {
         $table = self::$table;
@@ -69,7 +73,7 @@ class Customer
         try {
             $query->execute(['id' => $id]);
         } catch (\Exception $e) {
-            return false;
+            return null;
         }
 
         $data = $query->fetch($pdo::FETCH_ASSOC);
@@ -81,6 +85,10 @@ class Customer
         return new self($data);
     }
 
+    /**
+     * @param $email
+     * @return Customer|null
+     */
     public static function findByEmail($email)
     {
         $table = self::$table;
@@ -90,7 +98,7 @@ class Customer
         try {
             $query->execute(['email' => $email]);
         } catch (\Exception $e) {
-            return false;
+            return null;
         }
 
         $data = $query->fetch($pdo::FETCH_ASSOC);
@@ -102,6 +110,10 @@ class Customer
         return new self($data);
     }
 
+    /**
+     * @param array $data
+     * @return bool
+     */
     public function update($data = [])
     {
         if (!isset($this->fields['id'])) {
@@ -138,6 +150,9 @@ class Customer
         return true;
     }
 
+    /**
+     * @return bool
+     */
     public function save()
     {
         if (isset($this->fields["id"])) {
@@ -153,11 +168,18 @@ class Customer
         return true;
     }
 
+    /**
+     * @return float|int
+     */
     public static function generateBonus()
     {
         return rand(5, 20) / 100;
     }
 
+    /**
+     * @param $amount
+     * @return bool
+     */
     public function addTransaction($amount)
     {
         try {
@@ -175,6 +197,9 @@ class Customer
         return true;
     }
 
+    /**
+     * @param $amount
+     */
     public function checkTransaction($amount)
     {
         $table = self::$table;
@@ -196,6 +221,10 @@ class Customer
         }
     }
 
+    /**
+     * @param $amount
+     * @return float|int
+     */
     public function calculateBonus($amount)
     {
         $bonus_amount = 0;
@@ -215,6 +244,10 @@ class Customer
         return $bonus_amount;
     }
 
+    /**
+     * @param $amount
+     * @param $bonus_amount
+     */
     public function updateBalances($amount, $bonus_amount)
     {
         $table = self::$table;
@@ -234,6 +267,9 @@ class Customer
         ]);
     }
 
+    /**
+     * @param $amount
+     */
     public function insertTransaction($amount)
     {
         $transactionsTable = self::$transactionsTable;

@@ -9,6 +9,10 @@ class Transaction
 {
     protected static $table = 'transactions';
 
+    /**
+     * @param array $data
+     * @return false|array
+     */
     public static function generateReport($data = []) {
         if (!isset($data['period'])) {
             $period = '7 days';

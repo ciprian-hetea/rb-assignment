@@ -153,7 +153,6 @@ class CustomerTest extends TestCase
         );
 
         $response->assertStatus(422);
-        // TODO test the rest of the validation rules
     }
 
     /**
@@ -211,8 +210,6 @@ class CustomerTest extends TestCase
         $this->assertEquals($countryCode2, $customer->country);
         $this->assertEquals($email2, $customer->email);
         $this->assertEquals($gender2, $customer->gender);
-
-        // TODO test the validation rules
     }
 
     /**

@@ -8,6 +8,10 @@ use App\Models\Transaction;
 
 class ReportController extends Controller
 {
+    /**
+     * @param ReportIndexRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(ReportIndexRequest $request)
     {
         $validated = $request->validated();
