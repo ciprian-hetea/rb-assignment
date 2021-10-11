@@ -21,5 +21,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/customers', [CustomerController::class, 'create']);
 Route::put('/customers/{id}', [CustomerController::class, 'update']);
-//Route::post('/transactions', 'TransactionController@create');
+Route::post('/customers/{id}/transaction', [CustomerController::class, 'addTransaction']);
 //Route::get('/reports', 'ReportController@index');

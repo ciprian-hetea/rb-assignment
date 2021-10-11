@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\AddTransactionRequest;
 use App\Http\Requests\CustomerCreateRequest;
 use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\Customer;
@@ -45,5 +46,31 @@ class CustomerController extends Controller
 
         $updatedCustomer = Customer::find($id);
         return response()->json($updatedCustomer->fields);
+    }
+
+    public function addTransaction($id, AddTransactionRequest $request)
+    {
+        $customer = Customer::find($id);
+        if ($customer === null) {
+            return response(
+                [],
+                404
+            );
+        }
+
+        $validated = $request->validated();
+        $result = $customer->addTransaction($validated["amount"]);
+
+        if ($result === false) {
+            return response(
+                [],
+                409
+            );
+        }
+
+        return response(
+            [],
+            200
+        );
     }
 }

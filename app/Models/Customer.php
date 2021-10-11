@@ -8,6 +8,7 @@ class Customer
 {
     public $fields = array();
     protected static $table = 'customers';
+    protected static $transactionsTable = 'transactions';
 
     // The model fields that we can update in bulk
     protected static $fillable = [
@@ -151,6 +152,86 @@ class Customer
     public static function generateBonus()
     {
         return rand(5, 20) / 100;
+    }
+
+    public function addTransaction($amount)
+    {
+        $table = self::$table;
+        $pdo = DB::connection()->getPdo();
+        try {
+            $pdo->beginTransaction();
+
+            // Check if the transaction is valid
+            $query = $pdo->prepare("
+                SELECT balance, bonus_balance
+                FROM $table
+                WHERE id = :id
+                "); // TODO add FOR UPDATE only on live
+            $query->execute(['id' => $this->id]);
+            $data = $query->fetch($pdo::FETCH_ASSOC);
+
+            $futureBalance = $amount + $data['balance'];
+
+            if ($futureBalance < 0) {
+                throw new \BadMethodCallException(
+                    "Customer has insufficient balance."
+                );
+            }
+
+            // Calculate bonus
+            $bonus_amount = 0;
+            $transactionsTable = self::$transactionsTable;
+            $query = $pdo->prepare(
+                "SELECT count(id) as numberOfDeposits
+                 FROM $transactionsTable
+                 WHERE customer_id = :customer_id AND amount > 0"
+            );
+            $query->execute(['customer_id' => $this->id]);
+            $data = $query->fetch($pdo::FETCH_ASSOC);
+            $numberOfDeposits = $data["numberOfDeposits"];
+
+            if (($numberOfDeposits + 1) % 3 === 0) {
+                $bonus_amount = $amount * $this->bonus;
+            }
+
+            // Update balances
+            $query = $pdo->prepare(
+                "UPDATE {$table} SET
+                balance = balance + :amount,
+                bonus_balance = bonus_balance + :bonus_amount,
+                updated_at = :updated_at
+                WHERE id = :id"
+            );
+
+            $query->execute([
+                "amount" => $amount,
+                "bonus_amount" => $bonus_amount,
+                "updated_at" => now(),
+                "id" => $this->id
+            ]);
+
+            // Insert transaction
+            $query = $pdo->prepare(
+                "INSERT INTO $transactionsTable
+                (amount, customer_id, created_at)
+                VALUES
+                (:amount, :customer_id, :created_at)"
+            );
+
+            $query->execute([
+                "amount" => $amount,
+                "customer_id" => $this->id,
+                "created_at" => now()
+            ]);
+
+            // Commit all the transactions
+            $pdo->commit();
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+
+        return true;
     }
 
     public function __set($property, $value)

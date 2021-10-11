@@ -9,6 +9,22 @@ use App\Models\Customer;
 
 class CustomerTest extends TestCase
 {
+    public function createCustomer()
+    {
+        $firstName = $this->faker->firstName;
+        $lastName = $this->faker->lastName;
+        $countryCode = $this->faker->countryCode;
+        $email = $this->faker->email;
+        $gender = "M";
+
+        return Customer::create([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'country' => $countryCode,
+            'email' => $email,
+            'gender' => $gender
+        ]);
+    }
     /**
      * API call can create customer.
      *
@@ -214,5 +230,129 @@ class CustomerTest extends TestCase
         $this->assertEquals($gender2, $customer->gender);
 
         // TODO test the validation rules
+    }
+
+    /**
+     * API call can add a transaction.
+     *
+     * @return void
+     */
+    public function testApiCanAddTransactionForCustomer()
+    {
+        $customer = $this->createCustomer();
+        $amount = $this->faker->numberBetween(1, 10000);
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals($amount, $customer->balance);
+    }
+
+    /**
+     * Every third deposit will add a bonus to the customer.
+     *
+     * @return void
+     */
+    public function testApiCanAddBonusForCustomer()
+    {
+        $customer = $this->createCustomer();
+        $amount = $this->faker->numberBetween(1, 10000);
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals($amount, $customer->balance);
+
+        $amount = $this->faker->numberBetween(1, 10000);
+        $balance = $customer->balance + $amount;
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals($balance, $customer->balance);
+
+        $amount = $this->faker->numberBetween(1, 10000);
+        $balance = $customer->balance + $amount;
+        $bonusBalance = $customer->bonus * $amount;
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals($balance, $customer->balance);
+        $this->assertEquals($bonusBalance, $customer->bonus_balance);
+    }
+
+
+    /**
+     * Amont can be withdrawn.
+     *
+     * @return void
+     */
+    public function testWithdrawalWorks()
+    {
+        $customer = $this->createCustomer();
+        $amount = $this->faker->numberBetween(1, 10000);
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals($amount, $customer->balance);
+
+        $amount = -1 * $amount;
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(200);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals(0, $customer->balance);
+
+
+        $amount = $this->faker->numberBetween(-10000, -1);
+
+        $response = $this->postJson(
+            action([CustomerController::class, 'addTransaction'], $customer->id),
+            [
+                'amount' => $amount
+            ]
+        );
+
+        $response->assertStatus(409);
+        $customer = Customer::find($customer->id);
+        $this->assertEquals(0, $customer->balance);
     }
 }
