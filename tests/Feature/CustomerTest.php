@@ -2,29 +2,12 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Http\Controllers\API\CustomerController;
 use App\Models\Customer;
+use Tests\TestCase;
 
 class CustomerTest extends TestCase
 {
-    public function createCustomer()
-    {
-        $firstName = $this->faker->firstName;
-        $lastName = $this->faker->lastName;
-        $countryCode = $this->faker->countryCode;
-        $email = $this->faker->email;
-        $gender = "M";
-
-        return Customer::create([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'country' => $countryCode,
-            'email' => $email,
-            'gender' => $gender
-        ]);
-    }
     /**
      * API call can create customer.
      *
@@ -67,8 +50,8 @@ class CustomerTest extends TestCase
         $this->assertEquals($email, $customer->email);
         $this->assertEquals($gender, $customer->gender);
 
-        $this->assertLessThanOrEqual(0.25,$customer->bonus);
-        $this->assertGreaterThanOrEqual(0.05,$customer->bonus);
+        $this->assertLessThanOrEqual(0.25, $customer->bonus);
+        $this->assertGreaterThanOrEqual(0.05, $customer->bonus);
     }
 
     /**
