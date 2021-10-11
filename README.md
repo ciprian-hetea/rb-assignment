@@ -1,4 +1,5 @@
-##Install instructions
+# Install instructions
+
 - clone the repo
 - run `docker-compose up`
 - run `mv ./.env.test ./.env`
