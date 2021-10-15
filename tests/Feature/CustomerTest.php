@@ -331,7 +331,11 @@ class CustomerTest extends TestCase
             ]
         );
 
-        $response->assertStatus(409);
+        $response
+            ->assertStatus(409)
+            ->assertJson([
+                "message" => "Customer has insufficient balance."
+            ]);
         $customer = Customer::find($customer->id);
         $this->assertEquals(0, $customer->balance);
     }

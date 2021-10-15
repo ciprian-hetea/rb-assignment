@@ -4,11 +4,9 @@ namespace App\Models;
 
 use Illuminate\Support\Facades\DB;
 
-class Customer
+class Customer extends BaseModel
 {
-    public $fields = array();
     protected static $table = 'customers';
-    protected static $transactionsTable = 'transactions';
 
     // The model fields that we can update in bulk
     protected static $fillable = [
@@ -19,15 +17,9 @@ class Customer
         'gender'
     ];
 
-    private $pdo;
-
     public function __construct($data)
     {
-        foreach ($data as $column => $value) {
-            $this->fields[$column] = $value;
-        }
-
-        $this->pdo = DB::connection()->getPdo();
+        parent::__construct($data);
     }
 
     public static function create($data)
@@ -35,11 +27,12 @@ class Customer
         $table = self::$table;
         $pdo = DB::connection()->getPdo();
         $bonus = self::generateBonus();
-        $query = $pdo->prepare(
-            "INSERT INTO $table
+        $query = $pdo->prepare("
+            INSERT INTO $table
                 (first_name, last_name, country, email, gender, bonus, created_at, updated_at)
-             VALUES
-                (:first_name, :last_name, :country, :email, :gender, :bonus, :created_at, :updated_at)");
+            VALUES
+                (:first_name, :last_name, :country, :email, :gender, :bonus, :created_at, :updated_at)
+        ");
 
         try {
             $query->execute([
@@ -136,8 +129,7 @@ class Customer
         $queryString .= " updated_at = :updated_at ";
         $queryString .= "WHERE id = :id";
 
-        $pdo = DB::connection()->getPdo();
-        $query = $pdo->prepare($queryString);
+        $query = $this->pdo->prepare($queryString);
         $updatedFields["id"] = $this->id;
         $updatedFields["updated_at"] = now();
 
@@ -184,11 +176,18 @@ class Customer
     {
         try {
             $this->pdo->beginTransaction();
-            $this->checkTransaction($amount);
+            $this->checkAvailableBalance($amount);
             $bonus_amount = $this->calculateBonus($amount);
             $this->updateBalances($amount, $bonus_amount);
-            $this->insertTransaction($amount);
+            Transaction::create([
+                'customer_id' => $this->id,
+                'amount' => $amount
+            ]);
             $this->pdo->commit();
+        } catch (\BadMethodCallException $e) {
+            throw new \BadMethodCallException(
+                "Customer has insufficient balance."
+            );
         } catch (\Exception $e) {
             $this->pdo->rollBack();
             return false;
@@ -200,15 +199,15 @@ class Customer
     /**
      * @param $amount
      */
-    public function checkTransaction($amount)
+    public function checkAvailableBalance($amount)
     {
         $table = self::$table;
         $query = $this->pdo->prepare("
                 SELECT balance, bonus_balance
                 FROM $table
                 WHERE id = :id
-                FOR UPDATE"
-        );
+                FOR UPDATE
+        ");
         $query->execute(['id' => $this->id]);
         $data = $query->fetch($this->pdo::FETCH_ASSOC);
 
@@ -228,17 +227,7 @@ class Customer
     public function calculateBonus($amount)
     {
         $bonus_amount = 0;
-        $transactionsTable = self::$transactionsTable;
-        $query = $this->pdo->prepare(
-            "SELECT count(id) as numberOfDeposits
-                 FROM $transactionsTable
-                 WHERE customer_id = :customer_id AND amount > 0"
-        );
-        $query->execute(['customer_id' => $this->id]);
-        $data = $query->fetch($this->pdo::FETCH_ASSOC);
-        $numberOfDeposits = $data["numberOfDeposits"];
-
-        if (($numberOfDeposits + 1) % 3 === 0) {
+        if (Transaction::isEveryThirdDeposit($this->id)) {
             $bonus_amount = $amount * $this->bonus;
         }
         return $bonus_amount;
@@ -251,13 +240,13 @@ class Customer
     public function updateBalances($amount, $bonus_amount)
     {
         $table = self::$table;
-        $query = $this->pdo->prepare(
-            "UPDATE {$table} SET
+        $query = $this->pdo->prepare("
+            UPDATE {$table} SET
                 balance = balance + :amount,
                 bonus_balance = bonus_balance + :bonus_amount,
                 updated_at = :updated_at
-                WHERE id = :id"
-        );
+            WHERE id = :id
+        ");
 
         $query->execute([
             "amount" => $amount,
@@ -265,37 +254,5 @@ class Customer
             "updated_at" => now(),
             "id" => $this->id
         ]);
-    }
-
-    /**
-     * @param $amount
-     */
-    public function insertTransaction($amount)
-    {
-        $transactionsTable = self::$transactionsTable;
-        $query = $this->pdo->prepare(
-            "INSERT INTO $transactionsTable
-                (amount, customer_id, created_at)
-                VALUES
-                (:amount, :customer_id, :created_at)"
-        );
-
-        $query->execute([
-            "amount" => $amount,
-            "customer_id" => $this->id,
-            "created_at" => now()
-        ]);
-    }
-
-    public function __set($property, $value)
-    {
-        return $this->fields[$property] = $value;
-    }
-
-    public function __get($property)
-    {
-        return array_key_exists($property, $this->fields)
-            ? $this->fields[$property]
-            : null;
     }
 }

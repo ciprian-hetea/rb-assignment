@@ -73,7 +73,15 @@ class CustomerController extends Controller
         }
 
         $validated = $request->validated();
-        $result = $customer->addTransaction($validated["amount"]);
+
+        try {
+            $result = $customer->addTransaction($validated["amount"]);
+        } catch (\Exception $e) {
+            return response()->json(
+                ['message' => $e->getMessage()],
+                409
+            );
+        }
 
         if ($result === false) {
             return response()->json(

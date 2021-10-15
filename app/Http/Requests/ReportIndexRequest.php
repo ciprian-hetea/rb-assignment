@@ -24,17 +24,8 @@ class ReportIndexRequest extends FormRequest
     public function rules()
     {
         return [
-            'period' => [
-                'string',
-                'nullable',
-                function ($attribute, $value, $fail) {
-                    try {
-                        $date = \Carbon\Carbon::parse("{$value} ago");
-                    } catch (\Exception $e) {
-                        $fail("The {$attribute} is not a valid period.");
-                    }
-                },
-            ]
+            'from' => 'nullable|date_format:Y-m-d',
+            'to' => 'nullable|date_format:Y-m-d|after:from|before_or_equal:today'
         ];
     }
 }

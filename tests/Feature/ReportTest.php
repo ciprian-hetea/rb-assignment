@@ -43,7 +43,12 @@ class ReportTest extends TestCase
                 "withdrawalTotal" => 0
             ]
         ];
+
         foreach ($countries as $country => $values) {
+
+            // Have each countries transactions be offset by 1 day
+            Carbon::setTestNow(now()->subDay());
+
             for ($i = 0; $i < 3; $i++) {
                 $customer = $this->createCustomer(["countryCode" => $country]);
                 for ($j = 0; $j < 3; $j++) {
@@ -61,38 +66,51 @@ class ReportTest extends TestCase
             }
         }
 
+        // Back to today
+        Carbon::setTestNow();
+
+        // By default we do the report for the last 7 days
         $response = $this->json(
             'GET',
-            action([ReportController::class, 'index']),
-            ['period' => '7 days']
+            action([ReportController::class, 'index'])
         );
 
         $response->assertStatus(200)->assertJson([]);;
 
+        $day = 1;
         foreach ($countries as $country => $values) {
             $response->assertJsonFragment([
-                "date" => now()->format("Y-m-d"),
+                "date" => now()->subDays($day)->format("Y-m-d"),
                 "country" => $country,
                 "Unique Customers" => 3,
-                "No of Deposits" => strval($values["depositCount"]),
+                "No of Deposits" => $values["depositCount"],
                 "Total Deposit Amount" => $values["depositTotal"],
-                "No of Withdrawals" => strval($values["withdrawalCount"]),
+                "No of Withdrawals" => $values["withdrawalCount"],
                 "Total Withdrawal Amount" => $values["withdrawalTotal"],
             ]);
+            $day++;
         }
-
-        // In the future the results shouldn't be visible
-        Carbon::setTestNow(now()->addDays(3));
 
         $response = $this->json(
             'GET',
             action([ReportController::class, 'index']),
-            ['period' => '2 days']
+            [
+                'from' => now()->subDays(1)->format('Y-m-d'),
+                'to' => now()->format('Y-m-d')
+            ]
         );
 
         $response
             ->assertStatus(200)
-            ->assertJson([]);
+            ->assertExactJson([[
+                "date" => now()->subDay()->format("Y-m-d"),
+                "country" => 'MT',
+                "Unique Customers" => 3,
+                "No of Deposits" => $countries["MT"]["depositCount"],
+                "Total Deposit Amount" => $countries["MT"]["depositTotal"],
+                "No of Withdrawals" => $countries["MT"]["withdrawalCount"],
+                "Total Withdrawal Amount" => $countries["MT"]["withdrawalTotal"],
+            ]]);
     }
 
     /**
@@ -105,7 +123,10 @@ class ReportTest extends TestCase
         $response = $this->json(
             'GET',
             action([ReportController::class, 'index']),
-            ['period' => 'asdf']
+            [
+                'from' => 'asdf',
+                'to' => 'asdf'
+            ]
         );
 
         $response->assertStatus(422);
