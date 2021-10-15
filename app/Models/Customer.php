@@ -185,6 +185,7 @@ class Customer extends BaseModel
             ]);
             $this->pdo->commit();
         } catch (\BadMethodCallException $e) {
+            $this->pdo->rollBack();
             throw new \BadMethodCallException(
                 "Customer has insufficient balance."
             );
@@ -203,7 +204,7 @@ class Customer extends BaseModel
     {
         $table = self::$table;
         $query = $this->pdo->prepare("
-                SELECT balance, bonus_balance
+                SELECT balance
                 FROM $table
                 WHERE id = :id
                 FOR UPDATE
