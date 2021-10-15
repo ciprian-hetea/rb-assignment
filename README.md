@@ -3,7 +3,7 @@
 - clone the repo
 - run `docker build -t rb-assignment .`
 - run `docker-compose up`
-- run `mv ./.env.test ./.env`
+- run `cp ./.env.test ./.env`
 - replace the `DB_HOST` in each .env file with the name of each MySQL container in Docker
 - inside the main docker image:
     - run `php artisan migrate`

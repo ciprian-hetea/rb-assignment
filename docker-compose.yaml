@@ -4,20 +4,11 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        command: 'php artisan serve --host=0.0.0.0'
+        command: sh -c 'composer install --ignore-platform-reqs --no-ansi --no-interaction --no-scripts && php artisan serve --host=0.0.0.0'
         volumes:
             - .:/app
-            - /app/vendor
         ports:
             - 8000:8000
-        depends_on:
-            - db
-
-    queue:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        command: 'php artisan queue:work'
         depends_on:
             - db
 
