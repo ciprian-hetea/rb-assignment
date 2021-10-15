@@ -90,7 +90,7 @@ class Transaction extends BaseModel
             FROM transactions
             INNER JOIN customers
             ON transactions.customer_id = customers.id
-            WHERE transactions.created_at >= :from AND transactions.created_at <= :to
+            WHERE transactions.created_at >= :from AND transactions.created_at <= :to + interval 1 day
             GROUP BY date, country
         ");
 

@@ -9,3 +9,7 @@
     - run `php artisan migrate`
     - set the correct permissions on the test script by running `chmod 0755 test.sh` in the command line
     - you can run all the tests on the separate test DB by running the `test.sh` bash script
+# Documentation
+You can find the API documentation [here](https://documenter.getpostman.com/view/13137814/UV5WCHZj).
+
+Just click the "Run in Postman" button to test it out.
