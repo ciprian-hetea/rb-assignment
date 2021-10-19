@@ -54,31 +54,6 @@ class Customer extends BaseModel
     }
 
     /**
-     * @param $id
-     * @return Customer|null
-     */
-    public static function find($id)
-    {
-        $table = self::$table;
-        $pdo = DB::connection()->getPdo();
-        $query = $pdo->prepare("SELECT * FROM $table WHERE id = :id");
-
-        try {
-            $query->execute(['id' => $id]);
-        } catch (\Exception $e) {
-            return null;
-        }
-
-        $data = $query->fetch($pdo::FETCH_ASSOC);
-
-        if ($data === false) {
-            return null;
-        }
-
-        return new self($data);
-    }
-
-    /**
      * @param $email
      * @return Customer|null
      */

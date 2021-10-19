@@ -14,31 +14,6 @@ class Transaction extends BaseModel
         parent::__construct($data);
     }
 
-    /**
-     * @param $id
-     * @return self|null
-     */
-    public static function find($id)
-    {
-        $table = self::$table;
-        $pdo = DB::connection()->getPdo();
-        $query = $pdo->prepare("SELECT * FROM $table WHERE id = :id");
-
-        try {
-            $query->execute(['id' => $id]);
-        } catch (\Exception $e) {
-            return null;
-        }
-
-        $data = $query->fetch($pdo::FETCH_ASSOC);
-
-        if ($data === false) {
-            return null;
-        }
-
-        return new self($data);
-    }
-
     public static function create($data)
     {
         $table = self::$table;
